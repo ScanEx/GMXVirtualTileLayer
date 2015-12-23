@@ -9,10 +9,15 @@ var GmxVirtualTileLayer = function(options) {}
 GmxVirtualTileLayer.prototype.initFromDescription = function(layerDescription) {
     var props = layerDescription.properties,
         urlTemplate = props.MetaProperties['url-template'].Value,
-        isMercator = !!props.MetaProperties['merc-projection'];
-    
-    var layer = (isMercator ? L.tileLayer.Mercator : L.tileLayer)(urlTemplate);
-    
+        isMercator = !!props.MetaProperties['merc-projection'],
+        options = {};
+
+    if (props.Copyright) {
+        options.attribution = props.Copyright;
+    }
+
+    var layer = (isMercator ? L.tileLayer.Mercator : L.tileLayer)(urlTemplate, options);
+
     layer.getGmxProperties = function() {
         return props;
     }
