@@ -25,6 +25,9 @@ GmxVirtualTileLayer.prototype.initFromDescription = function(layerDescription) {
     return layer;
 }
 
+L.gmx.addLayerClass('TMS', GmxVirtualTileLayer);
+
+//depricated - use "TMS" instead
 L.gmx.addLayerClass('TiledRaster', GmxVirtualTileLayer);
 
 })();
