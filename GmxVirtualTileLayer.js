@@ -59,22 +59,28 @@ GmxVirtualWMSLayer.prototype.initFromDescription = function(layerDescription) {
     
     if (metaProps['clickable']) {
         layer.options.clickable = true;
+        
+        layer.onRemove = function(map) {
+            lastOpenedPopup && map.removeLayer(lastOpenedPopup);
+            L.TileLayer.WMS.prototype.onRemove.apply(this, arguments);
+        }
 
+        var lastOpenedPopup;
         layer.gmxEventCheck = function(event) {
             if (event.type === 'click') {
                 var p = this._map.project(event.latlng),
-                    I = p.x % 256, 
+                    I = p.x % 256,
                     J = p.y % 256,
                     tilePoint = p.divideBy(256).floor(),
                     url = this.getTileUrl(tilePoint);
 
                 url = url.replace('=GetMap', '=GetFeatureInfo');
                 url += '&X=' + I + '&Y=' + J + '&INFO_FORMAT=application/geojson&QUERY_LAYERS=' + options.layers;
-                
+
                 $.getJSON(url).then(function(geoJSON) {
                     if (geoJSON.features[0]) {
                         var html = L.Util.template(balloonTemplate, geoJSON.features[0].properties);
-                        L.popup()
+                        lastOpenedPopup = L.popup()
                             .setLatLng(event.latlng)
                             .setContent(html)
                             .openOn(this._map);
