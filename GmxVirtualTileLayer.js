@@ -8,10 +8,15 @@ var GmxVirtualTileLayer = function(options) {}
 
 GmxVirtualTileLayer.prototype.initFromDescription = function(layerDescription) {
     var props = layerDescription.properties,
-        urlTemplate = props.MetaProperties['url-template'].Value,
-        isMercator = !!props.MetaProperties['merc-projection'],
+        meta = props.MetaProperties,
+        urlTemplate = meta['url-template'] && meta['url-template'].Value,
+        isMercator = !!meta['merc-projection'],
         options = {};
 
+    if (!urlTemplate) {
+        return new L.gmx.DummyLayer(props);
+    }
+        
     if (props.Copyright) {
         options.attribution = props.Copyright;
     }
@@ -36,8 +41,12 @@ GmxVirtualWMSLayer.prototype.initFromDescription = function(layerDescription) {
     var WMS_OPTIONS = ['layers', 'styles', 'format', 'transparent', 'version'];
     var props = layerDescription.properties,
         metaProps = props.MetaProperties,
-        baseURL = metaProps['base-url'].Value,
+        baseURL = metaProps['base-url'] && metaProps['base-url'].Value,
         options = {};
+        
+    if (!baseURL) {
+        return new L.gmx.DummyLayer(props);
+    }
 
     if (props.Copyright) {
         options.attribution = props.Copyright;
@@ -49,7 +58,6 @@ GmxVirtualWMSLayer.prototype.initFromDescription = function(layerDescription) {
         }
     }
     
-    var balloonTemplate = metaProps['balloonTemplate'].Value;
     
     var layer = L.tileLayer.wms(baseURL, options);
     
@@ -57,7 +65,8 @@ GmxVirtualWMSLayer.prototype.initFromDescription = function(layerDescription) {
         return props;
     };    
     
-    if (metaProps['clickable']) {
+    var balloonTemplate = metaProps['balloonTemplate'] && metaProps['balloonTemplate'].Value;
+    if (metaProps['clickable'] && balloonTemplate) {
         layer.options.clickable = true;
         
         layer.onRemove = function(map) {
