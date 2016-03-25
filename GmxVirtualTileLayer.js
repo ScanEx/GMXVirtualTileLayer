@@ -20,6 +20,14 @@ GmxVirtualTileLayer.prototype.initFromDescription = function(layerDescription) {
     if (props.Copyright) {
         options.attribution = props.Copyright;
     }
+    
+    if (meta.minZoom) {
+        options.minZoom = meta.minZoom.Value;
+    }
+    
+    if (meta.maxZoom) {
+        options.maxZoom = meta.maxZoom.Value;
+    }
 
     var layer = (isMercator ? L.tileLayer.Mercator : L.tileLayer)(urlTemplate, options);
 
@@ -38,10 +46,10 @@ L.gmx.addLayerClass('TiledRaster', GmxVirtualTileLayer);
 var GmxVirtualWMSLayer = function(options) {}
 
 GmxVirtualWMSLayer.prototype.initFromDescription = function(layerDescription) {
-    var WMS_OPTIONS = ['layers', 'styles', 'format', 'transparent', 'version'];
+    var WMS_OPTIONS = ['layers', 'styles', 'format', 'transparent', 'version', 'minZoom', 'maxZoom'];
     var props = layerDescription.properties,
-        metaProps = props.MetaProperties,
-        baseURL = metaProps['base-url'] && metaProps['base-url'].Value,
+        meta = props.MetaProperties,
+        baseURL = meta['base-url'] && meta['base-url'].Value,
         options = {};
         
     if (!baseURL) {
@@ -52,9 +60,9 @@ GmxVirtualWMSLayer.prototype.initFromDescription = function(layerDescription) {
         options.attribution = props.Copyright;
     }
     
-    for (var p in metaProps) {
+    for (var p in meta) {
         if (WMS_OPTIONS.indexOf(p) !== -1) {
-            options[p] = metaProps[p].Value;
+            options[p] = meta[p].Value;
         }
     }
     
@@ -65,8 +73,8 @@ GmxVirtualWMSLayer.prototype.initFromDescription = function(layerDescription) {
         return props;
     };    
     
-    var balloonTemplate = metaProps['balloonTemplate'] && metaProps['balloonTemplate'].Value;
-    if (metaProps['clickable'] && balloonTemplate) {
+    var balloonTemplate = meta['balloonTemplate'] && meta['balloonTemplate'].Value;
+    if (meta['clickable'] && balloonTemplate) {
         layer.options.clickable = true;
         
         layer.onRemove = function(map) {
