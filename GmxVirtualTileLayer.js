@@ -46,7 +46,8 @@ L.gmx.addLayerClass('TiledRaster', GmxVirtualTileLayer);
 var GmxVirtualWMSLayer = function(options) {}
 
 GmxVirtualWMSLayer.prototype.initFromDescription = function(layerDescription) {
-    var WMS_OPTIONS = ['layers', 'styles', 'format', 'transparent', 'version', 'minZoom', 'maxZoom'];
+    var WMS_OPTIONS = ['layers', 'styles', 'format', 'transparent', 'version', 'minZoom', 'maxZoom', 'tileSize'];
+    var WMS_OPTIONS_PROCESSORS = {tileSize: parseInt};
     var props = layerDescription.properties,
         meta = props.MetaProperties,
         baseURL = meta['base-url'] && meta['base-url'].Value,
@@ -62,7 +63,7 @@ GmxVirtualWMSLayer.prototype.initFromDescription = function(layerDescription) {
     
     for (var p in meta) {
         if (WMS_OPTIONS.indexOf(p) !== -1) {
-            options[p] = meta[p].Value;
+            options[p] = WMS_OPTIONS_PROCESSORS[p] ? WMS_OPTIONS_PROCESSORS[p](meta[p].Value) : meta[p].Value;
         }
     }
     
@@ -86,9 +87,10 @@ GmxVirtualWMSLayer.prototype.initFromDescription = function(layerDescription) {
         layer.gmxEventCheck = function(event) {
             if (event.type === 'click') {
                 var p = this._map.project(event.latlng),
-                    I = p.x % 256,
-                    J = p.y % 256,
-                    tilePoint = p.divideBy(256).floor(),
+                    tileSize = layer.options.tileSize,
+                    I = p.x % tileSize,
+                    J = p.y % tileSize,
+                    tilePoint = p.divideBy(tileSize).floor(),
                     url = this.getTileUrl(tilePoint);
 
                 url = url.replace('=GetMap', '=GetFeatureInfo');
