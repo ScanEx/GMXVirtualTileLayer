@@ -4,6 +4,19 @@
 
 'use strict';
 
+//this function is copied from L.Utils and modified to allow missing data attributes
+var template = function (str, data) {
+    return str.replace(/\{ *([\w_]+) *\}/g, function (str, key) {
+        var value = data[key];
+        if (value === undefined) {
+            value = '';
+        } else if (typeof value === 'function') {
+            value = value(data);
+        }
+        return value;
+    });
+};
+
 var GmxVirtualTileLayer = function(options) {}
 
 GmxVirtualTileLayer.prototype.initFromDescription = function(layerDescription) {
@@ -98,7 +111,7 @@ GmxVirtualWMSLayer.prototype.initFromDescription = function(layerDescription) {
 
                 $.getJSON(url).then(function(geoJSON) {
                     if (geoJSON.features[0]) {
-                        var html = L.Util.template(balloonTemplate, geoJSON.features[0].properties);
+                        var html = template(balloonTemplate, geoJSON.features[0].properties);
                         lastOpenedPopup = L.popup()
                             .setLatLng(event.latlng)
                             .setContent(html)
