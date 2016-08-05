@@ -59,7 +59,7 @@ L.gmx.addLayerClass('TiledRaster', GmxVirtualTileLayer);
 var GmxVirtualWMSLayer = function(options) {}
 
 GmxVirtualWMSLayer.prototype.initFromDescription = function(layerDescription) {
-    var WMS_OPTIONS = ['layers', 'styles', 'format', 'transparent', 'version', 'minZoom', 'maxZoom', 'tileSize'];
+    var WMS_OPTIONS = ['layers', 'styles', 'format', 'transparent', 'version', 'minZoom', 'maxZoom', 'tileSize', 'f', 'bboxSR', 'imageSR', 'size'];
     var WMS_OPTIONS_PROCESSORS = {tileSize: parseInt};
     var props = layerDescription.properties,
         meta = props.MetaProperties,
