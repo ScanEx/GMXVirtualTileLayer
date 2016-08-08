@@ -29,15 +29,15 @@ GmxVirtualTileLayer.prototype.initFromDescription = function(layerDescription) {
     if (!urlTemplate) {
         return new L.gmx.DummyLayer(props);
     }
-        
+
     if (props.Copyright) {
         options.attribution = props.Copyright;
     }
-    
+
     if (meta.minZoom) {
         options.minZoom = meta.minZoom.Value;
     }
-    
+
     if (meta.maxZoom) {
         options.maxZoom = meta.maxZoom.Value;
     }
@@ -65,7 +65,7 @@ GmxVirtualWMSLayer.prototype.initFromDescription = function(layerDescription) {
         meta = props.MetaProperties,
         baseURL = meta['base-url'] && meta['base-url'].Value,
         options = {};
-        
+
     if (!baseURL) {
         return new L.gmx.DummyLayer(props);
     }
@@ -73,24 +73,23 @@ GmxVirtualWMSLayer.prototype.initFromDescription = function(layerDescription) {
     if (props.Copyright) {
         options.attribution = props.Copyright;
     }
-    
+
     for (var p in meta) {
         if (WMS_OPTIONS.indexOf(p) !== -1) {
             options[p] = WMS_OPTIONS_PROCESSORS[p] ? WMS_OPTIONS_PROCESSORS[p](meta[p].Value) : meta[p].Value;
         }
     }
-    
-    
+
     var layer = L.tileLayer.wms(baseURL, options);
-    
+
     layer.getGmxProperties = function() {
         return props;
-    };    
-    
+    };
+
     var balloonTemplate = meta['balloonTemplate'] && meta['balloonTemplate'].Value;
     if (meta['clickable'] && balloonTemplate) {
         layer.options.clickable = true;
-        
+
         layer.onRemove = function(map) {
             lastOpenedPopup && map.removeLayer(lastOpenedPopup);
             L.TileLayer.WMS.prototype.onRemove.apply(this, arguments);
