@@ -17,7 +17,7 @@ var template = function (str, data) {
     });
 };
 
-var GmxVirtualTileLayer = function(options) {}
+var GmxVirtualTileLayer = function(/* options */) {}
 
 GmxVirtualTileLayer.prototype.initFromDescription = function(layerDescription) {
     var props = layerDescription.properties,
@@ -56,7 +56,7 @@ L.gmx.addLayerClass('TMS', GmxVirtualTileLayer);
 //depricated - use "TMS" instead
 L.gmx.addLayerClass('TiledRaster', GmxVirtualTileLayer);
 
-var GmxVirtualWMSLayer = function(options) {}
+var GmxVirtualWMSLayer = function(/* options */) {}
 
 GmxVirtualWMSLayer.prototype.initFromDescription = function(layerDescription) {
     var WMS_OPTIONS = ['layers', 'styles', 'format', 'transparent', 'version', 'minZoom', 'maxZoom', 'tileSize', 'f', 'bboxSR', 'imageSR', 'size'];
@@ -135,7 +135,7 @@ L.gmx.balloonFunctions = {
 				latlng = ev.latlng;
 
 			if (this._lastOpenedPopup && map.hasLayer(this._lastOpenedPopup)) { map.removeLayer(this._lastOpenedPopup); }
-			
+
 			var popup = L.popup()
 				.setLatLng(latlng)
 				.setContent('<div class="cadInfo">Поиск информации...</div>')
@@ -145,7 +145,7 @@ L.gmx.balloonFunctions = {
 
 			L.gmxUtil.getCadastreFeatures(L.extend(ev, {callbackParamName: 'callback'})).then(function(data) {
 				var res = 'В данной точке объекты не найдены.<br><div class="red">Возможно участок свободен !</div>';
-				for(var i = 0, len = data.features.length; i < len; i++) {
+				for (var i = 0, len = data.features.length; i < len; i++) {
 					var it = data.features[i],
 						address = it.attrs.address;
 					if (address) {
