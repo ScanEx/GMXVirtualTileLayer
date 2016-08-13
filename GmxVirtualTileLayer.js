@@ -17,7 +17,7 @@ var template = function (str, data) {
     });
 };
 
-var GmxVirtualTileLayer = function(/* options */) {}
+var GmxVirtualTileLayer = function(options) {}
 
 GmxVirtualTileLayer.prototype.initFromDescription = function(layerDescription) {
     var props = layerDescription.properties,
@@ -56,7 +56,7 @@ L.gmx.addLayerClass('TMS', GmxVirtualTileLayer);
 //depricated - use "TMS" instead
 L.gmx.addLayerClass('TiledRaster', GmxVirtualTileLayer);
 
-var GmxVirtualWMSLayer = function(/* options */) {}
+var GmxVirtualWMSLayer = function(options) {}
 
 GmxVirtualWMSLayer.prototype.initFromDescription = function(layerDescription) {
     var WMS_OPTIONS = ['layers', 'styles', 'format', 'transparent', 'version', 'minZoom', 'maxZoom', 'tileSize', 'f', 'bboxSR', 'imageSR', 'size'];
@@ -86,18 +86,17 @@ GmxVirtualWMSLayer.prototype.initFromDescription = function(layerDescription) {
         return props;
     };
 
-    var balloonTemplate = meta.balloonTemplate && meta.balloonTemplate.Value,
-		balloonFunction = L.gmx.balloonFunctions[meta.balloonFunction && meta.balloonFunction.Value];
-    if (meta.clickable && (balloonTemplate || balloonFunction)) {
+    var balloonTemplate = meta['balloonTemplate'] && meta['balloonTemplate'].Value;
+    if (meta['clickable'] && balloonTemplate) {
         layer.options.clickable = true;
 
         layer.onRemove = function(map) {
-            this._lastOpenedPopup && map.removeLayer(this._lastOpenedPopup);
+            lastOpenedPopup && map.removeLayer(lastOpenedPopup);
             L.TileLayer.WMS.prototype.onRemove.apply(this, arguments);
         }
 
-        this._lastOpenedPopup = null;
-        layer.gmxEventCheck = balloonFunction || function(event) {
+        var lastOpenedPopup;
+        layer.gmxEventCheck = function(event) {
             if (event.type === 'click') {
                 var p = this._map.project(event.latlng),
                     tileSize = layer.options.tileSize,
@@ -112,7 +111,7 @@ GmxVirtualWMSLayer.prototype.initFromDescription = function(layerDescription) {
                 $.getJSON(url).then(function(geoJSON) {
                     if (geoJSON.features[0]) {
                         var html = template(balloonTemplate, geoJSON.features[0].properties);
-                        this._lastOpenedPopup = L.popup()
+                        lastOpenedPopup = L.popup()
                             .setLatLng(event.latlng)
                             .setContent(html)
                             .openOn(this._map);
@@ -128,39 +127,5 @@ GmxVirtualWMSLayer.prototype.initFromDescription = function(layerDescription) {
 }
 
 L.gmx.addLayerClass('WMS', GmxVirtualWMSLayer);
-L.gmx.balloonFunctions = {
-	cadastre: function(ev) {
-		if (ev.type === 'click') {
-			var map = this._map,
-				latlng = ev.latlng;
 
-			if (this._lastOpenedPopup && map.hasLayer(this._lastOpenedPopup)) { map.removeLayer(this._lastOpenedPopup); }
-
-			var popup = L.popup()
-				.setLatLng(latlng)
-				.setContent('<div class="cadInfo">Поиск информации...</div>')
-				.openOn(map);
-
-			this._lastOpenedPopup = popup;
-
-			L.gmxUtil.getCadastreFeatures(L.extend(ev, {callbackParamName: 'callback'})).then(function(data) {
-				var res = 'В данной точке объекты не найдены.<br><div class="red">Возможно участок свободен !</div>';
-				for (var i = 0, len = data.features.length; i < len; i++) {
-					var it = data.features[i],
-						address = it.attrs.address;
-					if (address) {
-						res = L.DomUtil.create('div', 'cadInfo');
-						var div = L.DomUtil.create('div', 'cadItem', res);
-						L.DomUtil.create('div', 'cadNum', div).innerHTML = it.attrs.cn || '';
-						L.DomUtil.create('div', 'address', div).innerHTML = it.attrs.address || '';
-						break;
-					}
-				}
-				popup.setContent(res);
-				return 1;
-			});
-		}
-
-	}
-};
 })();
