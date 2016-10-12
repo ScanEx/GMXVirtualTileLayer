@@ -17,7 +17,7 @@ var template = function (str, data) {
     });
 };
 
-var GmxVirtualTileLayer = function(options) {}
+var GmxVirtualTileLayer = function(/*options*/) {}
 
 GmxVirtualTileLayer.prototype.initFromDescription = function(layerDescription) {
     var props = layerDescription.properties,
@@ -56,7 +56,7 @@ L.gmx.addLayerClass('TMS', GmxVirtualTileLayer);
 //depricated - use "TMS" instead
 L.gmx.addLayerClass('TiledRaster', GmxVirtualTileLayer);
 
-var GmxVirtualWMSLayer = function(options) {}
+var GmxVirtualWMSLayer = function(/*options*/) {}
 
 GmxVirtualWMSLayer.prototype.initFromDescription = function(layerDescription) {
     var WMS_OPTIONS = ['layers', 'styles', 'format', 'transparent', 'version', 'minZoom', 'maxZoom', 'tileSize', 'f', 'bboxSR', 'imageSR', 'size'];
@@ -108,6 +108,7 @@ GmxVirtualWMSLayer.prototype.initFromDescription = function(layerDescription) {
                 url = url.replace('=GetMap', '=GetFeatureInfo');
                 url += '&X=' + I + '&Y=' + J + '&INFO_FORMAT=application/geojson&QUERY_LAYERS=' + options.layers;
 
+				/*eslint-disable no-undef */
                 $.getJSON(url).then(function(geoJSON) {
                     if (geoJSON.features[0]) {
                         var html = template(balloonTemplate, geoJSON.features[0].properties);
@@ -117,6 +118,7 @@ GmxVirtualWMSLayer.prototype.initFromDescription = function(layerDescription) {
                             .openOn(this._map);
                     }
                 }.bind(this));
+				/*eslint-enable */
             }
 
             return 1;
