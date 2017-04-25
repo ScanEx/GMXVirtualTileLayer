@@ -42,6 +42,10 @@ GmxVirtualTileLayer.prototype.initFromDescription = function(layerDescription) {
         options.maxZoom = meta.maxZoom.Value;
     }
 
+    if (meta.maxNativeZoom) {
+        options.maxNativeZoom = meta.maxNativeZoom.Value;
+    }
+
     var layer = (isMercator ? L.tileLayer.Mercator : L.tileLayer)(urlTemplate, options);
 
     layer.getGmxProperties = function() {
