@@ -134,4 +134,144 @@ GmxVirtualWMSLayer.prototype.initFromDescription = function(layerDescription) {
 
 L.gmx.addLayerClass('WMS', GmxVirtualWMSLayer);
 
+
+var GmxPBXTileLayer = function(/*options*/) {}
+
+GmxPBXTileLayer.prototype.initFromDescription = function(layerDescription) {
+    var props = layerDescription.properties,
+        meta = props.MetaProperties,
+        urlTemplate = meta['url-template'] && meta['url-template'].Value,
+        isMercator = !!meta['merc-projection'],
+        options = {};
+
+    if (!urlTemplate) {
+        return new L.gmx.DummyLayer(props);
+    }
+
+    if (props.Copyright) {
+        options.attribution = props.Copyright;
+    }
+
+    if (meta.minZoom) {
+        options.minZoom = meta.minZoom.Value;
+    }
+
+    if (meta.maxZoom) {
+        options.maxZoom = meta.maxZoom.Value;
+    }
+
+	//Globals that we can change later.
+	var fillColor = 'rgba(149,139,255,0.4)';
+	var strokeColor = 'rgb(20,20,20)';
+	var mvtSource = new L.TileLayer.MVTSource({
+	  url: urlTemplate,
+	  //debug: true,
+	  clickableLayers: ['gaul_2014_adm1'],
+	  visibleLayers: ['gaul_2014_adm1'], //ONLY show this layer that's contained inside of these pbfs.
+	  getIDForLayerFeature: function(feature) {
+		return feature._id;
+	  },
+
+	  /**
+	   * The filter function gets called when iterating though each vector tile feature (vtf). You have access
+	   * to every property associated with a given feature (the feature, and the layer). You can also filter
+	   * based of the context (each tile that the feature is drawn onto).
+	   *
+	   * Returning false skips over the feature and it is not drawn.
+	   *
+	   * @param feature
+	   * @returns {boolean}
+	   */
+	  filter: function(feature, context) {
+		if (feature.layer.name === 'gaul_2014_adm1' || feature.layer.name === 'gaul_2014_adm1_label') {
+		  return true;
+		}
+		return false;
+	  },
+
+	  style: function (feature) {
+		var style = {};
+
+		var type = feature.type;
+		switch (type) {
+		  case 1: //'Point'
+			style.color = 'rgba(49,79,79,1)';
+			style.radius = 5;
+			style.selected = {
+			  color: 'rgba(255,255,0,0.5)',
+			  radius: 6
+			};
+			break;
+		  case 2: //'LineString'
+			style.color = 'rgba(161,217,155,0.8)';
+			style.size = 3;
+			style.selected = {
+			  color: 'rgba(255,25,0,0.5)',
+			  size: 4
+			};
+			break;
+		  case 3: //'Polygon'
+			style.color = fillColor;
+			style.outline = {
+			  color: strokeColor,
+			  size: 1
+			};
+			style.selected = {
+			  color: 'rgba(255,140,0,0.3)',
+			  outline: {
+				color: 'rgba(255,140,0,1)',
+				size: 2
+			  }
+			};
+			break;
+		}
+
+		if (feature.layer.name === 'gaul_2014_adm1_label') {
+		  // style.ajaxSource = function(mvtFeature) {
+			// var id = mvtFeature.id;
+			// return 'http://localhost:8888/fsp/2014/fsp/aggregations-no-name/' + id + '.json';
+		  // };
+
+		  // style.staticLabel = function(mvtFeature, ajaxData) {
+			// var style = {
+			  // html: ajaxData.total_count,
+			  // iconSize: [33,33],
+			  // cssClass: 'label-icon-number',
+			  // cssSelectedClass: 'label-icon-number-selected'
+			// };
+			// return style;
+		  // };
+		}
+
+		return style;
+	  },
+
+	  /**
+	   * When we want to link events between layers, like clicking on a label and a
+	   * corresponding polygon freature, this will return the corresponding mapping
+	   * between layers. This provides knowledge of which other feature a given feature
+	   * is linked to.
+	   *
+	   * @param layerName  the layer we want to know the linked layer from
+	   * @returns {string} returns corresponding linked layer
+	   */
+	  layerLink: function(layerName) {
+		if (layerName.indexOf('_label') > -1) {
+		  return layerName.replace('_label','');
+		}
+		return layerName + '_label';
+	  }
+
+	});
+    // var layer = (isMercator ? L.tileLayer.Mercator : L.tileLayer)(urlTemplate, options);
+
+    mvtSource.getGmxProperties = function() {
+        return props;
+    }
+
+    return mvtSource;
+}
+
+L.gmx.addLayerClass('PBX', GmxPBXTileLayer);
+
 })();
