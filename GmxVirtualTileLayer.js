@@ -142,7 +142,8 @@ GmxPBXTileLayer.prototype.initFromDescription = function(layerDescription) {
         meta = props.MetaProperties,
         urlTemplate = meta['url-template'] && meta['url-template'].Value,
         isMercator = !!meta['merc-projection'],
-        options = {};
+        options = {},
+		mvtOptions = {};
 
     if (!urlTemplate) {
         return new L.gmx.DummyLayer(props);
@@ -160,18 +161,17 @@ GmxPBXTileLayer.prototype.initFromDescription = function(layerDescription) {
         options.maxZoom = meta.maxZoom.Value;
     }
 
-	//Globals that we can change later.
-	var fillColor = 'rgba(149,139,255,0.4)';
-	var strokeColor = 'rgb(20,20,20)';
-	var mvtSource = new L.TileLayer.MVTSource({
-	  url: urlTemplate,
-	  //debug: true,
-	  clickableLayers: ['gaul_2014_adm1'],
-	  visibleLayers: ['gaul_2014_adm1'], //ONLY show this layer that's contained inside of these pbfs.
-	  getIDForLayerFeature: function(feature) {
-		return feature._id;
-	  },
-
+	mvtOptions.url = urlTemplate;
+	if (meta.debug) {
+		mvtOptions.debug = meta.debug.Value === 'true';
+    }
+	if (meta.visibleLayers) {
+		mvtOptions.visibleLayers = meta.visibleLayers.Value.split(',');
+    }
+	if (meta.clickableLayers) {
+		mvtOptions.clickableLayers = meta.clickableLayers.Value.split(',');
+    }
+	if (meta.filter) {
 	  /**
 	   * The filter function gets called when iterating though each vector tile feature (vtf). You have access
 	   * to every property associated with a given feature (the feature, and the layer). You can also filter
@@ -182,68 +182,60 @@ GmxPBXTileLayer.prototype.initFromDescription = function(layerDescription) {
 	   * @param feature
 	   * @returns {boolean}
 	   */
-	  filter: function(feature, context) {
-		if (feature.layer.name === 'gaul_2014_adm1' || feature.layer.name === 'gaul_2014_adm1_label') {
-		  return true;
-		}
-		return false;
-	  },
-
-	  style: function (feature) {
-		var style = {};
-
-		var type = feature.type;
-		switch (type) {
-		  case 1: //'Point'
-			style.color = 'rgba(49,79,79,1)';
-			style.radius = 5;
-			style.selected = {
+		var filterLayers = meta.filter.Value.split(',');
+		mvtOptions.filter = function(feature, context) {
+			for (var i = 0, len = filterLayers.length; i < len; i++) {
+				if (feature.layer.name === filterLayers[i]) {
+				  return true;
+				}
+			}
+			return false;
+		};
+    }
+	var styleTypes = {
+		1: {	//'Point'
+			color: 'rgba(49,79,79,1)',
+			radius: 5,
+			selected: {
 			  color: 'rgba(255,255,0,0.5)',
 			  radius: 6
-			};
-			break;
-		  case 2: //'LineString'
-			style.color = 'rgba(161,217,155,0.8)';
-			style.size = 3;
-			style.selected = {
+			}
+		},
+		2: {	//'LineString'
+			color: 'rgba(161,217,155,0.8)',
+			size: 3,
+			selected: {
 			  color: 'rgba(255,25,0,0.5)',
 			  size: 4
-			};
-			break;
-		  case 3: //'Polygon'
-			style.color = fillColor;
-			style.outline = {
-			  color: strokeColor,
+			}
+		},
+		3: {	//'Polygon'
+			color: 'rgba(149,139,255,0.4)',
+			outline: {
+			  color: 'rgb(20,20,20)',
 			  size: 1
-			};
-			style.selected = {
+			},
+			selected: {
 			  color: 'rgba(255,140,0,0.3)',
-			  outline: {
-				color: 'rgba(255,140,0,1)',
-				size: 2
-			  }
-			};
-			break;
+				outline: {
+				  color: 'rgba(255,140,0,1)',
+				  size: 2
+				}
+			}
 		}
+	};
+	if (meta.style) {
+		styleTypes = JSON.parse(meta.style.Value);
+	}
+	mvtOptions.style = function (feature) {
+		var type = feature.type;
+		// var name = feature.layer.name;
+		return styleTypes[type] || {};
+    }
 
-		if (feature.layer.name === 'gaul_2014_adm1_label') {
-		  // style.ajaxSource = function(mvtFeature) {
-			// var id = mvtFeature.id;
-			// return 'http://localhost:8888/fsp/2014/fsp/aggregations-no-name/' + id + '.json';
-		  // };
-
-		  // style.staticLabel = function(mvtFeature, ajaxData) {
-			// var style = {
-			  // html: ajaxData.total_count,
-			  // iconSize: [33,33],
-			  // cssClass: 'label-icon-number',
-			  // cssSelectedClass: 'label-icon-number-selected'
-			// };
-			// return style;
-		  // };
-		}
-
-		return style;
+	var mvtSource = new L.TileLayer.MVTSource(Object.assign(mvtOptions, {
+	  getIDForLayerFeature: function(feature) {
+		return feature._id;
 	  },
 
 	  /**
@@ -262,8 +254,7 @@ GmxPBXTileLayer.prototype.initFromDescription = function(layerDescription) {
 		return layerName + '_label';
 	  }
 
-	});
-    // var layer = (isMercator ? L.tileLayer.Mercator : L.tileLayer)(urlTemplate, options);
+	}));
 
     mvtSource.getGmxProperties = function() {
         return props;
