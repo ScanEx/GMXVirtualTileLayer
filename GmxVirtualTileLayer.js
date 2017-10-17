@@ -141,7 +141,7 @@ GmxPBXTileLayer.prototype.initFromDescription = function(layerDescription) {
     var props = layerDescription.properties,
         meta = props.MetaProperties,
         urlTemplate = meta['url-template'] && meta['url-template'].Value,
-        isMercator = !!meta['merc-projection'],
+        // isMercator = !!meta['merc-projection'],
         options = {},
 		mvtOptions = {};
 
@@ -183,7 +183,7 @@ GmxPBXTileLayer.prototype.initFromDescription = function(layerDescription) {
 	   * @returns {boolean}
 	   */
 		var filterLayers = meta.filter.Value.split(',');
-		mvtOptions.filter = function(feature, context) {
+		mvtOptions.filter = function(feature) {
 			for (var i = 0, len = filterLayers.length; i < len; i++) {
 				if (feature.layer.name === filterLayers[i]) {
 				  return true;
