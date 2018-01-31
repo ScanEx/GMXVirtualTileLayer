@@ -1,4 +1,4 @@
-﻿/** GeoMixer virtual layer for standard tile raster layers (L.TileLayer)
+/** GeoMixer virtual layer for standard tile raster layers (L.TileLayer)
 */
 (function (){
 
