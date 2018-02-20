@@ -24,7 +24,7 @@ GmxVirtualTileLayer.prototype.initFromDescription = function(layerDescription) {
         meta = props.MetaProperties,
         urlTemplate = meta['url-template'] && meta['url-template'].Value,
         isMercator = !!meta['merc-projection'],
-        optionsList = meta.optionsList ? meta.optionsList.Value.split(',') : ['tms', 'minZoom', 'maxZoom', 'maxNativeZoom'],
+        optionsList = meta.optionsList ? meta.optionsList.Value.split(',') : [],
         options = {};
 
     if (!urlTemplate) {
@@ -33,11 +33,12 @@ GmxVirtualTileLayer.prototype.initFromDescription = function(layerDescription) {
 
     if (props.Copyright) { options.attribution = props.Copyright; }
 
-    options = L.extend(options, optionsList.reduce(function(prev, it) {
+	optionsList = optionsList.concat(['tms', 'minZoom', 'maxZoom', 'maxNativeZoom']);
+	options = L.extend({}, optionsList.reduce(function(prev, it) {
 		var key = it.trim();
 		if (meta[key]) { prev[key] = meta[key].Value.trim(); }
 		return prev;
-	}, {}));
+	}.bind(this), {}), options);
 
     var layer = (isMercator ? L.tileLayer.Mercator : L.tileLayer)(urlTemplate, options);
 
