@@ -92,14 +92,12 @@ GmxVirtualWMSLayer.prototype.initFromDescription = function(layerDescription) {
         layer.options.clickable = true;
 
         layer.onAdd = function(map) {
-			var mapCont = map.getContainer();
-			mapCont.style.cursor = 'help';
+			L.DomUtil.addClass(map.getContainer(), 'gmx-cursor-help');
             L.TileLayer.WMS.prototype.onAdd.apply(this, arguments);
         }
 
         layer.onRemove = function(map) {
-			var mapCont = map.getContainer();
-			mapCont.style.cursor = '';	// auto
+			L.DomUtil.removeClass(map.getContainer(), 'gmx-cursor-help');
             lastOpenedPopup && map.removeLayer(lastOpenedPopup);
             L.TileLayer.WMS.prototype.onRemove.apply(this, arguments);
         }
