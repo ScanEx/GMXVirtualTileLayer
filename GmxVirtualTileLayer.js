@@ -304,13 +304,25 @@ L.gmx.addLayerClass('WMS', GmxVirtualWMSLayer);
 			culture = meta['culture'] && meta['culture'].Value,
 			style = meta['style'] && meta['style'].Value,
 			options = {
-				bingMapsKey: bingMapsKey ||'AuhiCJHlGzhg93IqUH_oCpl_-ZUrIE6SPftlyGYUvr9Amx5nzA-WqGcPquyFZl4L',
+				bingMapsKey: bingMapsKey || 'Atr94LlesFUFHF7carCFRKMYBV3erkaYJVkkm7XTabk7p7ima_If38WMOqem2IdS',
 				imagerySet: imagerySet || '',
 				culture: culture || '',
 				style: style || ''
 			};
 
 		if (props.Copyright) { options.attribution = props.Copyright; }
+		if (meta.minZoom) {
+			options.minZoom = meta.minZoom.Value;
+		}
+		if (meta.maxZoom) {
+			options.maxZoom = meta.maxZoom.Value;
+		}
+		if (meta.minNativeZoom) {
+			options.minNativeZoom = meta.minNativeZoom.Value;
+		}
+		if (meta.maxNativeZoom) {
+			options.maxNativeZoom = meta.maxNativeZoom.Value;
+		}
 
 		var layer = L.tileLayer.bing(options);
 
