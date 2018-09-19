@@ -36,7 +36,10 @@ GmxVirtualTileLayer.prototype.initFromDescription = function(layerDescription) {
 	optionsList = optionsList.concat(['tms', 'minZoom', 'maxZoom', 'maxNativeZoom']);
 	options = L.extend({}, optionsList.reduce(function(prev, it) {
 		var key = it.trim();
-		if (meta[key]) { prev[key] = meta[key].Value.trim(); }
+		if (meta[key]) {
+			var zn = meta[key].Value.trim();
+			prev[key] = zn > 0 ? Number(zn) : zn;
+		}
 		return prev;
 	}.bind(this), {}), options);
 
