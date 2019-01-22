@@ -142,7 +142,9 @@ GmxVirtualWMSLayer.prototype.initFromDescription = function(layerDescription) {
 					url += '&X=' + I + '&Y=' + J + '&INFO_FORMAT=' + info + '&QUERY_LAYERS=' + options.layers;
 
 					/*eslint-disable no-undef */
-					$.getJSON(url).then(function(geoJSON) {
+					fetch(url, {mode: 'cors'})
+					.then(function(resp) { return resp.json(); })
+					.then(function(geoJSON) {
 						if (geoJSON.features[0]) {
 							var html = template(balloonTemplate, geoJSON.features[0].properties);
 							lastOpenedPopup = L.popup()
