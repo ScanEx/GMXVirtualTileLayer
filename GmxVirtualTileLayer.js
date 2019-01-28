@@ -75,10 +75,16 @@ GmxVirtualWMSLayer.prototype.initFromDescription = function(layerDescription) {
         options.attribution = props.Copyright;
     }
 
+    var metas = {};
     for (var p in meta) {
+		var v = meta[p].Value;
         if (WMS_OPTIONS.indexOf(p) !== -1) {
-            options[p] = WMS_OPTIONS_PROCESSORS[p] ? WMS_OPTIONS_PROCESSORS[p](meta[p].Value) : meta[p].Value;
+            options[p] = WMS_OPTIONS_PROCESSORS[p] ? WMS_OPTIONS_PROCESSORS[p](v) : v;
         }
+        if (p.indexOf('Function') !== -1) {
+			v = new Function('ev', v);
+        }
+		metas[p] = v;
     }
 
     var layer = L.tileLayer.wms(baseURL, options);
@@ -86,12 +92,13 @@ GmxVirtualWMSLayer.prototype.initFromDescription = function(layerDescription) {
     layer.getGmxProperties = function() {
         return props;
     };
+	layer.metas = metas;
 
     var balloonTemplate = meta['balloonTemplate'] && meta['balloonTemplate'].Value;
     var infoFormat = meta['info_format'] && meta['info_format'].Value;
     var popupURLTemplate = meta['popupURLTemplate'] && meta['popupURLTemplate'].Value;
 
-    if (meta['clickable'] && balloonTemplate) {
+    if (metas.clickable) {
         layer.options.clickable = true;
 
         layer.onAdd = function(map) {
@@ -108,23 +115,43 @@ GmxVirtualWMSLayer.prototype.initFromDescription = function(layerDescription) {
         var lastOpenedPopup;
         layer.gmxEventCheck = function(event) {
             if (event.type === 'click') {
-                var latlng = event.latlng;
+                event.layer = layer;
+                var latlng = event.latlng,
+					urlFuncton = layer.metas.popupURLFunction,
+					isFunction = typeof(urlFuncton) === 'function';
 
-				if (popupURLTemplate) {
-					var url = L.Util.template(popupURLTemplate, {lat: latlng.lat, lng: latlng.lng});
-					var gmxProxy = L.gmx.gmxProxy || '//maps.kosmosnimki.ru/ApiSave.ashx';
-					fetch(gmxProxy + '?WrapStyle=none&get=' + encodeURIComponent(url), {mode: 'cors'})
+				if (popupURLTemplate || isFunction) {
+					var url = isFunction ? urlFuncton(event) : L.Util.template(popupURLTemplate, {lat: latlng.lat, lng: latlng.lng});
+					if (layer.metas.proxy === 'true') {
+						url = (L.gmx.gmxProxy || '//maps.kosmosnimki.ru/ApiSave.ashx') + '?WrapStyle=none&get=' + encodeURIComponent(url);
+					}
+					fetch(url, {mode: 'cors'})
 						.then(function(resp) {
 							return resp.json();
 						})
 						.then(function(json) {
-							if (json.Status === 'ok' && json.Result) {
-								var content = L.DomUtil.create('div', '');
-								content.innerHTML = json.Result;
+							var features = json.features,
+								it = null;
+							if (!features && json.Status === 'ok' && json.Result) {
+								var geoJSON = JSON.parse(json.Result);
+								features = geoJSON.features;
+							}
+							if (features.length) {
+								var content = '';
+								it = features[0];
+								if (isFunction) {
+									it.summary = gmxAPIutils.prettifyArea(gmxAPIutils.geoJSONGetArea(it));
+									content = gmxAPIutils.parseBalloonTemplate('', it);
+								} else {
+									content = JSON.stringify(features, null, 2);
+								}
 								lastOpenedPopup = L.popup({maxHeight: 400})
 									.setLatLng(latlng)
 									.setContent(content)
 									.openOn(this._map);
+							}
+							if (!it) {
+								console.log('Not found features:', json);
 							}
 						}.bind(this))
 						.catch(console.log);
@@ -141,7 +168,6 @@ GmxVirtualWMSLayer.prototype.initFromDescription = function(layerDescription) {
 					// url += '&X=' + I + '&Y=' + J + '&QUERY_LAYERS=' + options.layers;
 					url += '&X=' + I + '&Y=' + J + '&INFO_FORMAT=' + info + '&QUERY_LAYERS=' + options.layers;
 
-					/*eslint-disable no-undef */
 					fetch(url, {mode: 'cors'})
 					.then(function(resp) { return resp.json(); })
 					.then(function(geoJSON) {
@@ -153,7 +179,6 @@ GmxVirtualWMSLayer.prototype.initFromDescription = function(layerDescription) {
 								.openOn(this._map);
 						}
 					}.bind(this));
-					/*eslint-enable */
 				}
             }
 
