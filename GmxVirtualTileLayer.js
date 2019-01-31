@@ -136,12 +136,12 @@ GmxVirtualWMSLayer.prototype.initFromDescription = function(layerDescription) {
 								var geoJSON = JSON.parse(json.Result);
 								features = geoJSON.features;
 							}
-							if (features.length) {
+							if (features && features.length) {
 								var content = '';
 								it = features[0];
 								if (isFunction) {
-									it.summary = gmxAPIutils.prettifyArea(gmxAPIutils.geoJSONGetArea(it));
-									content = gmxAPIutils.parseBalloonTemplate('', it);
+									it.summary = L.gmxUtil.prettifyArea(L.gmxUtil.geoJSONGetArea(it));
+									content = L.gmxUtil.parseBalloonTemplate('', it);
 								} else {
 									content = JSON.stringify(features, null, 2);
 								}
