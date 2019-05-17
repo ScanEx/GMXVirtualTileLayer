@@ -168,17 +168,46 @@ GmxVirtualWMSLayer.prototype.initFromDescription = function(layerDescription) {
 					// url += '&X=' + I + '&Y=' + J + '&QUERY_LAYERS=' + options.layers;
 					url += '&X=' + I + '&Y=' + J + '&INFO_FORMAT=' + info + '&QUERY_LAYERS=' + options.layers;
 
+					if (layer.metas.feature_count) {
+						url += '&feature_count=' + layer.metas.feature_count;
+					}
+					if (layer.metas.proxy === 'true') {
+						url = '//maps.kosmosnimki.ru/proxy?' + encodeURIComponent(url);
+					}
 					fetch(url, {mode: 'cors'})
 					.then(function(resp) { return resp.json(); })
 					.then(function(geoJSON) {
-						if (geoJSON.features[0]) {
-							var html = template(balloonTemplate, geoJSON.features[0].properties);
+						var items = geoJSON.features;
+						if (items.length) {
+							var curr = -1,
+								lastIndex = items.length - 1,
+								 setPage = function (prev) {
+									curr += prev ? -1 : 1;
+									if (curr > lastIndex) { curr = 0; }
+									else if (curr < 0) { curr = lastIndex; }
+									var it = items[curr],
+										div = L.DomUtil.create('div', 'wmsInfo');
+									div.innerHTML = '<div class="wmsInfo">\
+										<div class="paginate">\
+										<span class="left" style="visibility: ' + (curr > 0 ? 'visible' : 'hidden') + ';">&lt;</span>\
+										<span class="center">' + (it && it.id || '') + '</span>\
+										<span class="right" style="visibility: ' + (curr < lastIndex ? 'visible' : 'hidden') + ';">&gt;</span>\
+									</div>\
+									<div class="feature">' + template(balloonTemplate, it.properties) + '</div></div>';
+									var left = div.getElementsByClassName('left'),
+										right = div.getElementsByClassName('right');
+									L.DomEvent.on(left[0], 'click', function() {lastOpenedPopup.setContent(setPage(true));}, this);
+									L.DomEvent.on(right[0], 'click',  function() {lastOpenedPopup.setContent(setPage());}, this);
+									return div;
+								};
 							lastOpenedPopup = L.popup()
 								.setLatLng(event.latlng)
-								.setContent(html)
+								.setContent(setPage())
 								.openOn(this._map);
+							
 						}
-					}.bind(this));
+					}.bind(this))
+					.catch(err => console.warn(err));
 				}
             }
 
