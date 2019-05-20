@@ -1,0 +1,19 @@
+{
+  "name": "gmx-virtual-tile-layer",
+  "version": "1.0.0",
+  "description": "Виртуальный слой ГеоМиксера для отображения стандартных тайловый растровых слоёв (`L.TileLayer`).\r Тип виртуального слоя: `TMS` (для обратной совместимости поддерживается `TiledRaster`)",
+  "main": "GmxVirtualTileLayer.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ScanEx/GMXVirtualTileLayer.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ScanEx/GMXVirtualTileLayer/issues"
+  },
+  "homepage": "https://github.com/ScanEx/GMXVirtualTileLayer#readme"
+}
