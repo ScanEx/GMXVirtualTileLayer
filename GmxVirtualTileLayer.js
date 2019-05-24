@@ -121,11 +121,11 @@ GmxVirtualWMSLayer.prototype.initFromDescription = function(layerDescription) {
 					isFunction = typeof(urlFuncton) === 'function';
 
 				if (popupURLTemplate || isFunction) {
-					var url = isFunction ? urlFuncton(event) : L.Util.template(popupURLTemplate, {lat: latlng.lat, lng: latlng.lng});
+					var url1 = isFunction ? urlFuncton(event) : L.Util.template(popupURLTemplate, {lat: latlng.lat, lng: latlng.lng});
 					if (layer.metas.proxy === 'true') {
-						url = (L.gmx.gmxProxy || '//maps.kosmosnimki.ru/ApiSave.ashx') + '?WrapStyle=none&get=' + encodeURIComponent(url);
+						url1 = (L.gmx.gmxProxy || '//maps.kosmosnimki.ru/ApiSave.ashx') + '?WrapStyle=none&get=' + encodeURIComponent(url1);
 					}
-					fetch(url, {mode: 'cors'})
+					fetch(url1, {mode: 'cors'})
 						.then(function(resp) {
 							return resp.json();
 						})
@@ -204,10 +204,9 @@ GmxVirtualWMSLayer.prototype.initFromDescription = function(layerDescription) {
 								.setLatLng(event.latlng)
 								.setContent(setPage())
 								.openOn(this._map);
-							
 						}
 					}.bind(this))
-					.catch(err => console.warn(err));
+					.catch(function(err) { console.warn(err); });
 				}
             }
 
