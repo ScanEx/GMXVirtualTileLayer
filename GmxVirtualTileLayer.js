@@ -158,8 +158,8 @@ GmxVirtualWMSLayer.prototype.initFromDescription = function(layerDescription) {
 				} else {
 					var p = this._map.project(latlng),
 						tileSize = layer.options.tileSize,
-						I = p.x % tileSize,
-						J = p.y % tileSize,
+						I = Math.round(p.x % tileSize),
+						J = Math.round(p.y % tileSize),
 						tilePoint = p.divideBy(tileSize).floor(),
 						url = this.getTileUrl(tilePoint),
 						info = infoFormat || 'application/geojson';
