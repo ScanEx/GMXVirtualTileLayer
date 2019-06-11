@@ -189,13 +189,13 @@ GmxVirtualWMSLayer.prototype.initFromDescription = function(layerDescription) {
 										div = L.DomUtil.create('div', 'wmsInfo');
 									div.innerHTML = '<div class="wmsInfo">\
 										<div class="paginate">\
-										<span class="left" style="visibility: ' + (curr > 0 ? 'visible' : 'hidden') + ';">&lt;</span>\
-										<span class="center">' + (it && it.id || '') + '</span>\
-										<span class="right" style="visibility: ' + (curr < lastIndex ? 'visible' : 'hidden') + ';">&gt;</span>\
+										<span class="icon-left-open" style="visibility: ' + (curr > 0 ? 'visible' : 'hidden') + ';"></span>\
+										<span class="center"><b>' + (curr + 1) + '</b> из <b>' + (lastIndex + 1) + '</b></span>\
+										<span class="icon-right-open" style="visibility: ' + (curr < lastIndex ? 'visible' : 'hidden') + ';"></span>\
 									</div>\
 									<div class="feature">' + template(balloonTemplate, it.properties) + '</div></div>';
-									var left = div.getElementsByClassName('left'),
-										right = div.getElementsByClassName('right');
+									var left = div.getElementsByClassName('icon-left-open'),
+										right = div.getElementsByClassName('icon-right-open');
 									L.DomEvent.on(left[0], 'click', function() {lastOpenedPopup.setContent(setPage(true));}, this);
 									L.DomEvent.on(right[0], 'click',  function() {lastOpenedPopup.setContent(setPage());}, this);
 									return div;
