@@ -33,7 +33,7 @@ GmxVirtualTileLayer.prototype.initFromDescription = function(layerDescription) {
 
     if (props.Copyright) { options.attribution = props.Copyright; }
 
-	optionsList = optionsList.concat(['tms', 'minZoom', 'maxZoom', 'maxNativeZoom']);
+	optionsList = optionsList.concat(['tms', 'minZoom', 'maxZoom', 'maxNativeZoom', 'date']);
 	options = L.extend({}, optionsList.reduce(function(prev, it) {
 		var key = it.trim();
 		if (meta[key]) {
@@ -122,15 +122,16 @@ GmxVirtualWMSLayer.prototype.initFromDescription = function(layerDescription) {
 
 				if (popupURLTemplate || isFunction) {
 					var url1 = isFunction ? urlFuncton(event) : L.Util.template(popupURLTemplate, {lat: latlng.lat, lng: latlng.lng});
+					var body = layer.metas.body;
 					if (layer.metas.proxy === 'true') {
 						url1 = (L.gmx.gmxProxy || '//maps.kosmosnimki.ru/ApiSave.ashx') + '?WrapStyle=none&get=' + encodeURIComponent(url1);
 					}
 					fetch(url1, {mode: 'cors'})
 						.then(function(resp) {
-							return resp.json();
+							return body ? resp.text() : resp.json();
 						})
 						.then(function(json) {
-							var features = json.features,
+							var features = typeof(json) === 'string' ? [json] : json.features,
 								it = null;
 							if (!features && json.Status === 'ok' && json.Result) {
 								var geoJSON = JSON.parse(json.Result);
@@ -143,7 +144,7 @@ GmxVirtualWMSLayer.prototype.initFromDescription = function(layerDescription) {
 									it.summary = L.gmxUtil.prettifyArea(L.gmxUtil.geoJSONGetArea(it));
 									content = L.gmxUtil.parseBalloonTemplate('', it);
 								} else {
-									content = JSON.stringify(features, null, 2);
+									content = body ? it : JSON.stringify(features, null, 2);
 								}
 								lastOpenedPopup = L.popup({maxHeight: 400})
 									.setLatLng(latlng)
@@ -154,7 +155,9 @@ GmxVirtualWMSLayer.prototype.initFromDescription = function(layerDescription) {
 								console.log('Not found features:', json);
 							}
 						}.bind(this))
-						.catch(console.log);
+						.catch(function(err) {
+							console.log('err', err);
+						});
 				} else {
 					var p = this._map.project(latlng),
 						tileSize = layer.options.tileSize,
